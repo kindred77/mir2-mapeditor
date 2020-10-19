@@ -75,11 +75,12 @@ namespace Map_Editor
         private Layer layer = Layer.None;
 
         public CellInfo[,] M2CellInfo;
+        public CellObj[,] M2CellObj;
         private MapReader map;
         private string mapFileName;
         private Point mapPoint;
 
-        private int mapWidth, mapHeight;
+        private int mapWidth, mapHeight, mapType;
         public CellInfo[,] NewCellInfo;
         private CellInfoData[] objectDatas;
 
@@ -100,10 +101,11 @@ namespace Map_Editor
         private ListItem wemadeMir2ListItem;
         private ListItem wemadeMir3ListItem;
 
+        private MapConverter mapConverter;
         public Main()
         {
             InitializeComponent();
-
+            mapConverter = new MapConverter();
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
@@ -150,7 +152,7 @@ namespace Map_Editor
                 AnimationCount++;
             }
 
-            Text = string.Format("FPS: {0}---Map:W {1}:H {2} ----W,S,A,D，观察地图<{3}>", FPS, mapWidth, mapHeight,
+            Text = string.Format("FPS: {0}---Map:W {1}:H {2} Type: {3} ----W,S,A,D，观察地图<{4}>", FPS, mapWidth, mapHeight,mapType,
                 mapFileName);
         }
 
@@ -180,7 +182,7 @@ namespace Map_Editor
 
 
                     //back
-                    DrawBack(chkBack.Checked);
+                    DrawBackNew(chkBack.Checked);
                     //midd
                     DrawMidd(chkMidd.Checked);
                     //front
@@ -285,6 +287,18 @@ namespace Map_Editor
             //DXManager.Sprite.Draw2D(mi.ImageTexture, new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), new Point(drawX, drawY), Color.White);
         }
 
+        private void DrawNew(MLibrary lib, int index, int drawX, int drawY)
+        {
+            lib.CheckImage(index);
+            var mi = lib.Images[index];
+            if (mi.Image == null || mi.ImageTexture == null) return;
+            int w = mi.Width;
+            int h = mi.Height;
+            DXManager.Sprite.Draw2D(mi.ImageTexture, Rectangle.Empty, new SizeF(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX), new PointF(drawX, drawY), Color.White);
+
+            //DXManager.Sprite.Draw2D(mi.ImageTexture, new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), new Point(drawX, drawY), Color.White);
+        }
+
         public void DrawBlend(int libindex, int index, Point point, Color colour, bool offSet = false, float rate = 1f)
         {
             Libraries.MapLibs[libIndex].CheckImage(index);
@@ -297,6 +311,23 @@ namespace Map_Editor
             var oldBlend = DXManager.Blending;
             DXManager.SetBlend(true, rate);
             DXManager.Sprite.Draw2D(mi.ImageTexture, Rectangle.Empty, new SizeF(w*zoomMIN/zoomMAX, h*zoomMIN/zoomMAX), point, Color.White);
+
+            //DXManager.Sprite.Draw2D(mi.ImageTexture, new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), point, Color.White);
+            DXManager.SetBlend(oldBlend);
+        }
+
+        public void DrawBlendNew(MLibrary lib, int index, Point point, Color colour, bool offSet = false, float rate = 1f)
+        {
+            lib.CheckImage(index);
+            var mi = lib.Images[index];
+            if (mi.Image == null || mi.ImageTexture == null) return;
+            int w = mi.Width;
+            int h = mi.Height;
+
+            if (offSet) point.Offset(mi.X * zoomMIN / zoomMAX, mi.Y * zoomMIN / zoomMAX);
+            var oldBlend = DXManager.Blending;
+            DXManager.SetBlend(true, rate);
+            DXManager.Sprite.Draw2D(mi.ImageTexture, Rectangle.Empty, new SizeF(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX), point, Color.White);
 
             //DXManager.Sprite.Draw2D(mi.ImageTexture, new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), new Rectangle(Point.Empty, new Size(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX)), point, Color.White);
             DXManager.SetBlend(oldBlend);
@@ -910,6 +941,62 @@ namespace Map_Editor
             }
         }
 
+        private void DrawMiddNew(bool blMidd)
+        {
+            if (blMidd)
+            {
+                byte animation;
+                bool blend;
+                for (var y = mapPoint.Y - 1; y <= mapPoint.Y + OffSetY + 35; y++)
+                {
+                    if (y >= mapHeight || y < 0) continue;
+                    for (var x = mapPoint.X - 1; x <= mapPoint.X + OffSetX + 35; x++)
+                    {
+                        if (x >= mapWidth || x < 0) continue;
+                        drawX = (x - mapPoint.X) * (CellWidth * zoomMIN / zoomMAX);
+                        index = M2CellInfo[x, y].MiddleImage - 1;
+                        //libIndex = M2CellInfo[x, y].MiddleIndex;
+                        //if (libIndex < 0 || libIndex >= Libraries.MapLibs.Length) continue;
+                        //if (index < 0 || index >= Libraries.MapLibs[libIndex].Images.Count) continue;
+
+                        if (index < 0 || index >= M2CellObj[x,y].MiddleLib.Images.Count) continue;
+
+                        animation = M2CellInfo[x, y].MiddleAnimationFrame;
+                        blend = false;
+                        if ((animation > 0) && (animation < 255))
+                        {
+                            if ((animation & 0x0f) > 0)
+                            {
+                                blend = true;
+                                animation &= 0x0f;
+                            }
+                            if (animation > 0)
+                            {
+                                var animationTick = M2CellInfo[x, y].MiddleAnimationTick;
+                                index += AnimationCount % (animation + animation * animationTick) / (1 + animationTick);
+                            }
+                        }
+
+                        //var s = Libraries.MapLibs[libIndex].GetSize(index);
+                        var s = M2CellObj[x, y].MiddleLib.GetSize(index);
+                        if ((s.Width != CellWidth || s.Height != CellHeight) &&
+                            (s.Width != CellWidth * 2 || s.Height != CellHeight * 2))
+                        {
+                            drawY = (y - mapPoint.Y + 1) * (CellHeight * zoomMIN / zoomMAX);
+                            //Draw(libIndex, index, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                            DrawNew(M2CellObj[x, y].MiddleLib, index, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                        }
+                        else
+                        {
+                            drawY = (y - mapPoint.Y) * (CellHeight * zoomMIN / zoomMAX);
+                            //Draw(libIndex, index, drawX, drawY);
+                            DrawNew(M2CellObj[x, y].MiddleLib, index, drawX, drawY);
+                        }
+                    }
+                }
+            }
+        }
+
         private void DrawBack(bool blBack)
         {
             if (blBack)
@@ -929,6 +1016,38 @@ namespace Map_Editor
                         if (libIndex < 0 || libIndex >= Libraries.MapLibs.Length) continue;
                         if (index < 0 || index >= Libraries.MapLibs[libIndex].Images.Count) continue;
                         Draw(libIndex, index, drawX, drawY);
+                    }
+                }
+            }
+        }
+
+        private void DrawBackNew(bool blBack)
+        {
+            if (blBack)
+            {
+                for (var y = mapPoint.Y - 1; y <= mapPoint.Y + OffSetY; y++)
+                {
+                    if (y % 2 != 0) continue;
+                    if (y >= mapHeight) continue;
+                    drawY = (y - mapPoint.Y) * (CellHeight * zoomMIN / zoomMAX);
+                    for (var x = mapPoint.X - 1; x <= mapPoint.X + OffSetX; x++)
+                    {
+                        if (x % 2 != 0) continue;
+                        if (x >= mapWidth) continue;
+                        drawX = (x - mapPoint.X) * (CellWidth * zoomMIN / zoomMAX);
+                        index = (M2CellInfo[x, y].BackImage & 0x1FFFFFFF) - 1;
+
+                        //libIndex = M2CellInfo[x, y].BackIndex;
+                        //if (libIndex < 0 || libIndex >= Libraries.MapLibs.Length) continue;
+                        //if (index < 0 || index >= Libraries.MapLibs[libIndex].Images.Count) continue;
+                        //Draw(libIndex, index, drawX, drawY);
+
+                        if(M2CellObj[x, y].BackLib==null)
+                        {
+                            continue;
+                        }
+                        if (index < 0 || index >= M2CellObj[x,y].BackLib.Images.Count) continue;
+                        DrawNew(M2CellObj[x, y].BackLib, index, drawX, drawY);
                     }
                 }
             }
@@ -1029,11 +1148,14 @@ namespace Map_Editor
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 M2CellInfo = new CellInfo[mapWidth, mapHeight];
+                M2CellObj = new CellObj[mapWidth, mapHeight];
                 for (var x = 0; x < mapWidth; x++)
                 {
                     for (var y = 0; y < mapHeight; y++)
                     {
                         M2CellInfo[x, y] = new CellInfo();
+                        M2CellObj[x, y] = new CellObj();
+                        M2CellObj[x, y].Info = M2CellInfo[x, y];
                     }
                 }
             }
@@ -1049,9 +1171,11 @@ namespace Map_Editor
                 var filePath = openFileDialog.FileName;
                 map = new MapReader(filePath);
                 M2CellInfo = map.MapCells;
+                M2CellObj = map.MapCellObjs;
                 mapPoint = new Point(0, 0);
                 SetMapSize(map.Width, map.Height);
                 mapFileName = openFileDialog.FileName;
+                mapType = map.Type;
             }
         }
 
@@ -2633,8 +2757,11 @@ namespace Map_Editor
 
         private void btnAbout_Click(object sender, EventArgs e)
         {
-            Form frmAbout = new FrmAbout();
-            frmAbout.ShowDialog();
+            //Form frmAbout = new FrmAbout();
+            //frmAbout.ShowDialog();
+            mapConverter = new MapConverter();
+            mapConverter.SetData(map);
+            mapConverter.Show(this);
         }
 
         private void Main_KeyDown(object sender, KeyEventArgs e)

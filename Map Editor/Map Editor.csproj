@@ -119,6 +119,12 @@
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
     <Compile Include="MapCode.cs" />
+    <Compile Include="MapConverter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MapConverter.Designer.cs">
+      <DependentUpon>MapConverter.cs</DependentUpon>
+    </Compile>
     <Compile Include="MLibrary.cs" />
     <Compile Include="NewFileFrm.cs">
       <SubType>Form</SubType>
@@ -152,6 +158,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MapConverter.resx">
+      <DependentUpon>MapConverter.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="NewFileFrm.resx">
       <DependentUpon>NewFileFrm.cs</DependentUpon>

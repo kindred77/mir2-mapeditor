@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Map_Editor
@@ -9,15 +10,19 @@ namespace Map_Editor
         /// 资源编号
         /// </summary>
         public short BackIndex;
+        public short OriginalBackIndex;
         /// <summary>
         /// 资源内图片索引
         /// </summary>
         public int BackImage;
+        public short OriginalMiddleIndex;
         public short MiddleIndex;
         public short MiddleImage;
+        public short OriginalFrontIndex;
         public short FrontIndex;
         public short FrontImage;
 
+        public byte OriginalDoorIndex;
         public byte DoorIndex;
         public byte DoorOffset;
 
@@ -43,14 +48,56 @@ namespace Map_Editor
         //    for (int i = 0; i < CellObjects.Count; i++)
         //        CellObjects[i].Draw();
         //}
+
+        public CellInfo Clone()
+        {
+            return new CellInfo()
+            {
+                BackIndex=this.BackIndex,
+                OriginalBackIndex=this.OriginalBackIndex,
+                BackImage =this.BackImage,
+                MiddleIndex=this.MiddleIndex,
+                OriginalMiddleIndex=this.OriginalMiddleIndex,
+                MiddleImage =this.MiddleImage,
+                FrontIndex=this.FrontIndex,
+                OriginalFrontIndex=this.OriginalFrontIndex,
+                FrontImage =this.FrontImage,
+                DoorIndex=this.DoorIndex,
+                OriginalDoorIndex=this.OriginalDoorIndex,
+                DoorOffset =this.DoorOffset,
+                FrontAnimationFrame=this.FrontAnimationFrame,
+                FrontAnimationTick=this.FrontAnimationTick,
+                MiddleAnimationFrame=this.MiddleAnimationFrame,
+                MiddleAnimationTick=this.MiddleAnimationTick,
+                TileAnimationImage=this.TileAnimationImage,
+                TileAnimationOffset=this.TileAnimationOffset,
+                TileAnimationFrames=this.TileAnimationFrames,
+                Light=this.Light,
+                Unknown=this.Unknown,
+                FishingCell=this.FishingCell
+            };
+        }
+    }
+
+    public class CellObj
+    {
+        public CellInfo Info;
+
+        public MLibrary BackLib;
+        public MLibrary MiddleLib;
+        public MLibrary FrontLib;
+        public MLibrary DoorLib;
     }
 
   public  class MapReader
     {
         public int Width, Height;
         public CellInfo[,] MapCells;
+        public CellObj[,] MapCellObjs;
         private string FileName;
         private byte[] Bytes;
+
+        public int Type = 0;
         
         public MapReader(string FileName)
         {
@@ -69,11 +116,14 @@ namespace Map_Editor
                 Width = 1000;
                 Height = 1000;
                 MapCells = new CellInfo[Width, Height];
+                MapCellObjs = new CellObj[Width, Height];
 
                 for (int x = 0; x < Width; x++)
                     for (int y = 0; y < Height; y++)
                     {
                         MapCells[x, y] = new CellInfo();
+                        MapCellObjs[x, y] = new CellObj();
+                        MapCellObjs[x, y].Info = MapCells[x, y];
                     }
                 return;
             }
@@ -136,10 +186,50 @@ namespace Map_Editor
 
         }
 
+        public Dictionary<int, MLibrary> BackLibDict = new Dictionary<int, MLibrary>();
+        public Dictionary<int, MLibrary> MiddleLibDict = new Dictionary<int, MLibrary>();
+        public Dictionary<int, MLibrary> FrontLibDict = new Dictionary<int, MLibrary>();
+        public Dictionary<int, MLibrary> DoorLibDict = new Dictionary<int, MLibrary>();
+        enum DictType{
+            Back,
+            Middle,
+            Front,
+            Door
+        }
+        private void PutToDict(DictType dictType,int idx)
+        {
+            Dictionary<int, MLibrary> libDict;
+            if(dictType==DictType.Back)
+            {
+                libDict = BackLibDict;
+            }
+            else if (dictType == DictType.Middle)
+            {
+                libDict = MiddleLibDict;
+            }
+            else if (dictType == DictType.Front)
+            {
+                libDict = FrontLibDict;
+            }
+            else if (dictType == DictType.Door)
+            {
+                libDict = DoorLibDict;
+            }
+            else
+            {
+                throw new Exception("unknow dict type!");
+            }
+
+            if(!libDict.ContainsKey(idx))
+            {
+                libDict.Add(idx,null);
+            }
+        }
         private void LoadMapType0()
         {
             try
             {
+                Type = 0;
                 int offset = 0;
                 Width = BitConverter.ToInt16(Bytes, offset);
                 offset += 2;
@@ -182,6 +272,7 @@ namespace Map_Editor
         {
             try
             {
+                Type = 1;
                 int offSet = 21;
 
                 int w = BitConverter.ToInt16(Bytes, offSet);
@@ -229,35 +320,48 @@ namespace Map_Editor
         {
             try
             {
+                Type = 2;
                 int offset = 0;
                 Width = BitConverter.ToInt16(Bytes, offset);
                 offset += 2;
                 Height = BitConverter.ToInt16(Bytes, offset);
                 MapCells = new CellInfo[Width, Height];
+                MapCellObjs = new CellObj[Width, Height];
                 offset = 52;
                 for (int x = 0; x < Width; x++)
                     for (int y = 0; y < Height; y++)
                     {//14
                         MapCells[x, y] = new CellInfo();
+                        MapCellObjs[x, y] = new CellObj();
+                        MapCellObjs[x, y].Info = MapCells[x, y];
                         MapCells[x, y].BackImage = (short)BitConverter.ToInt16(Bytes, offset);
                         offset += 2;
                         MapCells[x, y].MiddleImage = (short)BitConverter.ToInt16(Bytes, offset);
                         offset += 2;
                         MapCells[x, y].FrontImage = (short)BitConverter.ToInt16(Bytes, offset);
                         offset += 2;
-                        MapCells[x, y].DoorIndex = Bytes[offset++];
+                        MapCells[x, y].OriginalDoorIndex = Bytes[offset++];
+                        MapCells[x, y].DoorIndex = MapCells[x, y].OriginalDoorIndex;
                         MapCells[x, y].DoorOffset = Bytes[offset++];
                         MapCells[x, y].FrontAnimationFrame = Bytes[offset++];
                         MapCells[x, y].FrontAnimationTick = Bytes[offset++];
-                        MapCells[x, y].FrontIndex = (short)(Bytes[offset++] + 120);
+                        MapCells[x, y].OriginalFrontIndex = (short)Bytes[offset++];
+                        MapCells[x, y].FrontIndex = (short)(MapCells[x, y].OriginalFrontIndex + 120);
                         MapCells[x, y].Light = Bytes[offset++];
-                        MapCells[x, y].BackIndex = (short)(Bytes[offset++] + 100);
-                        MapCells[x, y].MiddleIndex = (short)(Bytes[offset++] + 110);
+                        MapCells[x, y].OriginalBackIndex = (short)Bytes[offset++];
+                        MapCells[x, y].BackIndex = (short)(MapCells[x, y].OriginalBackIndex + 100);
+                        MapCells[x, y].OriginalMiddleIndex = (short)Bytes[offset++];
+                        MapCells[x, y].MiddleIndex = (short)(MapCells[x, y].OriginalMiddleIndex + 110);
                         if ((MapCells[x, y].BackImage & 0x8000) != 0)
                             MapCells[x, y].BackImage = (MapCells[x, y].BackImage & 0x7FFF) | 0x20000000;
 
                         if (MapCells[x, y].Light == 100 || MapCells[x, y].Light == 101)
                             MapCells[x, y].FishingCell = true;
+
+                        PutToDict(DictType.Back, MapCells[x, y].OriginalBackIndex);
+                        PutToDict(DictType.Middle, MapCells[x, y].OriginalMiddleIndex);
+                        PutToDict(DictType.Front, MapCells[x, y].OriginalFrontIndex);
+                        PutToDict(DictType.Door, MapCells[x, y].OriginalDoorIndex);
                     }
             }
             catch (Exception)
@@ -271,6 +375,7 @@ namespace Map_Editor
         {
             try
             {
+                Type = 3;
                 int offset = 0;
                 Width = BitConverter.ToInt16(Bytes, offset);
                 offset += 2;
@@ -318,6 +423,7 @@ namespace Map_Editor
         {
             try
             {
+                Type = 4;
                 int offset = 31;
                 int w = BitConverter.ToInt16(Bytes, offset);
                 offset += 2;
@@ -363,6 +469,7 @@ namespace Map_Editor
         {
             try
             {
+                Type = 5;
                 byte flag = 0;
                 int offset = 20;
                 short Attribute = (short)(BitConverter.ToInt16(Bytes,offset));
@@ -428,6 +535,7 @@ namespace Map_Editor
         {
             try
             {
+                Type = 6;
                 byte flag = 0;
                 int offset = 16;
                 Width = BitConverter.ToInt16(Bytes, offset);
@@ -480,6 +588,7 @@ namespace Map_Editor
         {
             try
             {
+                Type = 7;
                 int offset = 21;
                 Width = BitConverter.ToInt16(Bytes, offset);
                 offset += 4;
@@ -523,19 +632,24 @@ namespace Map_Editor
         private void LoadMapType100()
         {
             try 
-            { 
+            {
+                Type = 100;
                 int offset = 4;
                 if ((Bytes[0]!= 1) || (Bytes[1] != 0)) return;//only support version 1 atm
                 Width = BitConverter.ToInt16(Bytes, offset);
                 offset += 2;
                 Height = BitConverter.ToInt16(Bytes, offset);
                 MapCells = new CellInfo[Width, Height];
+                MapCellObjs = new CellObj[Width, Height];
                 offset = 8;
                 for (int x = 0; x < Width; x++)
                     for (int y = 0; y < Height; y++)
                     {
                         MapCells[x, y] = new CellInfo();
+                        MapCellObjs[x, y] = new CellObj();
+                        MapCellObjs[x, y].Info = MapCells[x, y];
                         MapCells[x, y].BackIndex = (short)BitConverter.ToInt16(Bytes, offset);
+                        MapCells[x, y].OriginalBackIndex = MapCells[x, y].BackIndex;
                         offset += 2;
 
                         //--------------------------------------------------------------------------
@@ -548,14 +662,17 @@ namespace Map_Editor
 
                         offset += 4;
                         MapCells[x, y].MiddleIndex = (short)BitConverter.ToInt16(Bytes, offset);
+                        MapCells[x, y].OriginalMiddleIndex = MapCells[x, y].MiddleIndex;
                         offset += 2;
                         MapCells[x, y].MiddleImage = (short)BitConverter.ToInt16(Bytes, offset);
                         offset += 2;
                         MapCells[x, y].FrontIndex = (short)BitConverter.ToInt16(Bytes, offset);
+                        MapCells[x, y].OriginalFrontIndex = MapCells[x, y].FrontIndex;
                         offset += 2;
                         MapCells[x, y].FrontImage = (short)BitConverter.ToInt16(Bytes, offset);
                         offset += 2;
                         MapCells[x, y].DoorIndex = Bytes[offset++];
+                        MapCells[x, y].OriginalDoorIndex = MapCells[x, y].DoorIndex;
                         MapCells[x, y].DoorOffset = Bytes[offset++];
                         MapCells[x, y].FrontAnimationFrame = Bytes[offset++];
                         MapCells[x, y].FrontAnimationTick = Bytes[offset++];
@@ -570,12 +687,54 @@ namespace Map_Editor
 
                         if (MapCells[x, y].Light == 100 || MapCells[x, y].Light == 101)
                             MapCells[x, y].FishingCell = true;
+
+                        PutToDict(DictType.Back, MapCells[x, y].OriginalBackIndex);
+                        PutToDict(DictType.Middle, MapCells[x, y].OriginalMiddleIndex);
+                        PutToDict(DictType.Front, MapCells[x, y].OriginalFrontIndex);
+                        PutToDict(DictType.Door, MapCells[x, y].OriginalDoorIndex);
                     }
             }
             catch (Exception)
             {
                 //if (Settings.LogErrors) CMain.SaveError(ex.ToString());
             }
+        }
+
+        public void SaveAsNormal(string fileName,CellInfo[,] cellInfos,int width,int height)
+        {
+            var fileStream = new FileStream(fileName, FileMode.Create);
+            var binaryWriter = new BinaryWriter(fileStream);
+            short ver = 1;
+            char[] tag = { 'C', '#' };
+            binaryWriter.Write(ver);
+            binaryWriter.Write(tag);
+
+            binaryWriter.Write(Convert.ToInt16(width));
+            binaryWriter.Write(Convert.ToInt16(height));
+            for (var x = 0; x < width; x++)
+            {
+                for (var y = 0; y < height; y++)
+                {
+                    binaryWriter.Write(cellInfos[x, y].BackIndex);
+                    binaryWriter.Write(cellInfos[x, y].BackImage);
+                    binaryWriter.Write(cellInfos[x, y].MiddleIndex);
+                    binaryWriter.Write(cellInfos[x, y].MiddleImage);
+                    binaryWriter.Write(cellInfos[x, y].FrontIndex);
+                    binaryWriter.Write(cellInfos[x, y].FrontImage);
+                    binaryWriter.Write(cellInfos[x, y].DoorIndex);
+                    binaryWriter.Write(cellInfos[x, y].DoorOffset);
+                    binaryWriter.Write(cellInfos[x, y].FrontAnimationFrame);
+                    binaryWriter.Write(cellInfos[x, y].FrontAnimationTick);
+                    binaryWriter.Write(cellInfos[x, y].MiddleAnimationFrame);
+                    binaryWriter.Write(cellInfos[x, y].MiddleAnimationTick);
+                    binaryWriter.Write(cellInfos[x, y].TileAnimationImage);
+                    binaryWriter.Write(cellInfos[x, y].TileAnimationOffset);
+                    binaryWriter.Write(cellInfos[x, y].TileAnimationFrames);
+                    binaryWriter.Write(cellInfos[x, y].Light);
+                }
+            }
+            binaryWriter.Flush();
+            binaryWriter.Dispose();
         }
     }
 }

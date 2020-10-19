@@ -303,7 +303,7 @@ namespace Map_Editor
 
         public MLibrary(string filename)
         {
-            FileName = filename + ".lib";
+            FileName = filename.ToLower().EndsWith(".lib")?filename:filename + ".lib";
             Initialize();
         }
 
