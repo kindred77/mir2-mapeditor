@@ -184,9 +184,9 @@ namespace Map_Editor
                     //back
                     DrawBackNew(chkBack.Checked);
                     //midd
-                    DrawMidd(chkMidd.Checked);
+                    DrawMiddNew(chkMidd.Checked);
                     //front
-                    DrawFront(chkFront.Checked);
+                    DrawFrontNew(chkFront.Checked);
                     //Draw Select Object
                     DrawObject(objectDatas);
                     //Draw Select TextureImage
@@ -842,6 +842,108 @@ namespace Map_Editor
                         {
                             drawY = (y - mapPoint.Y + 1)*(CellHeight*zoomMIN/zoomMAX);
                             Draw(libIndex, index + doorOffset, drawX, drawY - s.Height*zoomMIN/zoomMAX);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DrawFrontNew(bool blFront)
+        {
+            if (blFront)
+            {
+                byte animation;
+                bool blend;
+
+                for (var y = mapPoint.Y - 1; y <= mapPoint.Y + OffSetY + 35; y++)
+                {
+                    if (y >= mapHeight || y < 0) continue;
+                    //drawY = (y + 1) * (cellHeight * zoomMIN / zoomMAX);
+                    for (var x = mapPoint.X; x <= mapPoint.X + OffSetX + 35; x++)
+                    {
+                        if (x >= mapWidth || x < 0) continue;
+                        drawX = (x - mapPoint.X) * (CellWidth * zoomMIN / zoomMAX);
+                        index = (M2CellInfo[x, y].FrontImage & 0x7FFF) - 1;
+                        //libIndex = M2CellInfo[x, y].FrontIndex;
+                        //if (libIndex < 0 || libIndex >= Libraries.MapLibs.Length) continue;
+                        //if (index < 0 || index >= Libraries.MapLibs[libIndex].Images.Count) continue;
+                        if (index < 0 || index >= M2CellObj[x,y].FrontLib.Images.Count) continue;
+
+                        animation = M2CellInfo[x, y].FrontAnimationFrame;
+                        if ((animation & 0x80) > 0)
+                        {
+                            blend = true;
+                            animation &= 0x7F;
+                        }
+                        else
+                        {
+                            blend = false;
+                        }
+
+                        if (animation > 0)
+                        {
+                            var animationTick = M2CellInfo[x, y].FrontAnimationTick;
+                            index += AnimationCount % (animation + animation * animationTick) / (1 + animationTick);
+                        }
+
+                        var doorOffset = M2CellInfo[x, y].DoorOffset;
+                        //var s = Libraries.MapLibs[libIndex].GetSize(index);
+                        var s = M2CellObj[x, y].FrontLib.GetSize(index);
+                        //不是 48*32 或96*64 的地砖 是大物体
+                        if ((s.Width != CellWidth || s.Height != CellHeight) &&
+                            (s.Width != CellWidth * 2 || s.Height != CellHeight * 2))
+                        {
+                            drawY = (y - mapPoint.Y + 1) * (CellHeight * zoomMIN / zoomMAX);
+                            //如果有动画
+                            if (animation > 0)
+                            {
+                                //如果需要混合
+                                if (blend)
+                                {
+                                    //新盛大地图
+                                    if ((libIndex > 99) & (libIndex < 199))
+                                    {
+                                        //DrawBlend(libIndex, index,
+                                        //new Point(drawX, drawY - 3 * CellHeight * zoomMIN / zoomMAX), Color.White, true);
+                                        DrawBlendNew(M2CellObj[x, y].FrontLib, index,
+                                            new Point(drawX, drawY - 3 * CellHeight * zoomMIN / zoomMAX), Color.White, true);
+                                    }
+                                    //老地图灯柱 index >= 2723 && index <= 2732
+                                    else
+                                    {
+                                        //DrawBlend(libIndex, index, new Point(drawX, drawY - s.Height * zoomMIN / zoomMAX),
+                                        //Color.White, index >= 2723 && index <= 2732);
+                                        DrawBlendNew(M2CellObj[x, y].FrontLib, index, new Point(drawX, drawY - s.Height * zoomMIN / zoomMAX),
+                                        Color.White, index >= 2723 && index <= 2732);
+                                    }
+                                }
+                                //不需要混合
+                                else
+                                {
+                                    //Draw(libIndex, index, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                                    DrawNew(M2CellObj[x, y].FrontLib, index, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                                }
+                            }
+                            //如果没动画 
+                            else
+                            {
+                                //Draw(libIndex, index, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                                DrawNew(M2CellObj[x, y].FrontLib, index, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                            }
+                        }
+                        //是 48*32 或96*64 的地砖
+                        else
+                        {
+                            drawY = (y - mapPoint.Y) * (CellHeight * zoomMIN / zoomMAX);
+                            //Draw(libIndex, index, drawX, drawY);
+                            DrawNew(M2CellObj[x, y].FrontLib, index, drawX, drawY);
+                        }
+                        //显示门打开
+                        if (chkDoor.Checked && (doorOffset > 0))
+                        {
+                            drawY = (y - mapPoint.Y + 1) * (CellHeight * zoomMIN / zoomMAX);
+                            //Draw(libIndex, index + doorOffset, drawX, drawY - s.Height * zoomMIN / zoomMAX);
+                            DrawNew(M2CellObj[x, y].FrontLib, index + doorOffset, drawX, drawY - s.Height * zoomMIN / zoomMAX);
                         }
                     }
                 }
