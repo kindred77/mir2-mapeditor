@@ -291,5 +291,19 @@ namespace Map_Editor
                 MessageBox.Show("保存成功!");
             }
         }
+
+        private void DGV_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            if(e.ColumnIndex==1)
+            {
+                var openFileDialog = new OpenFileDialog();
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    DataGridView dgv = (DataGridView)sender;
+                    dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = openFileDialog.FileName;
+                }
+            }
+            
+        }
     }
 }

@@ -68,6 +68,7 @@
             this.BackLibConvert_DGV.RowTemplate.Height = 23;
             this.BackLibConvert_DGV.Size = new System.Drawing.Size(354, 131);
             this.BackLibConvert_DGV.TabIndex = 0;
+            this.BackLibConvert_DGV.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DGV_CellBeginEdit);
             // 
             // BackLibIndex
             // 
@@ -96,6 +97,7 @@
             this.MiddleLibConvert_DGV.RowTemplate.Height = 23;
             this.MiddleLibConvert_DGV.Size = new System.Drawing.Size(354, 131);
             this.MiddleLibConvert_DGV.TabIndex = 1;
+            this.MiddleLibConvert_DGV.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DGV_CellBeginEdit);
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -124,6 +126,7 @@
             this.FrontLibConvert_DGV.RowTemplate.Height = 23;
             this.FrontLibConvert_DGV.Size = new System.Drawing.Size(354, 131);
             this.FrontLibConvert_DGV.TabIndex = 2;
+            this.FrontLibConvert_DGV.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DGV_CellBeginEdit);
             // 
             // dataGridViewTextBoxColumn4
             // 
@@ -152,6 +155,7 @@
             this.DoorLibConvert_DGV.RowTemplate.Height = 23;
             this.DoorLibConvert_DGV.Size = new System.Drawing.Size(354, 131);
             this.DoorLibConvert_DGV.TabIndex = 3;
+            this.DoorLibConvert_DGV.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DGV_CellBeginEdit);
             // 
             // dataGridViewTextBoxColumn7
             // 
