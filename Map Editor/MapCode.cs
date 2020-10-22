@@ -283,7 +283,7 @@ namespace Map_Editor
                 Width = w ^ xor;
                 Height = h ^ xor;
                 MapCells = new CellInfo[Width, Height];
-
+                MapCellObjs = new CellObj[Width, Height];
                 offSet = 54;
 
                 for (int x = 0; x < Width; x++)
@@ -304,10 +304,22 @@ namespace Map_Editor
                                 Light = Bytes[++offSet],
                                 Unknown = Bytes[++offSet],
                             };
+
+                        MapCells[x, y].OriginalBackIndex = MapCells[x, y].BackIndex;
+                        MapCells[x, y].OriginalMiddleIndex = MapCells[x, y].MiddleIndex;
+                        MapCells[x, y].OriginalFrontIndex = MapCells[x, y].FrontIndex;
+                        MapCells[x, y].OriginalDoorIndex = MapCells[x, y].DoorIndex;
+                        MapCellObjs[x, y] = new CellObj();
+                        MapCellObjs[x, y].Info = MapCells[x, y];
                         offSet++;
 
                         if (MapCells[x, y].Light == 100 || MapCells[x, y].Light == 101)
                             MapCells[x, y].FishingCell = true;
+
+                        PutToDict(DictType.Back, MapCells[x, y].OriginalBackIndex);
+                        PutToDict(DictType.Middle, MapCells[x, y].OriginalMiddleIndex);
+                        PutToDict(DictType.Front, MapCells[x, y].OriginalFrontIndex);
+                        PutToDict(DictType.Door, MapCells[x, y].OriginalDoorIndex);
                     }
             }
             catch (Exception)
