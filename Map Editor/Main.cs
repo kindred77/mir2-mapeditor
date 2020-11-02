@@ -279,7 +279,8 @@ namespace Map_Editor
         {
             Libraries.MapLibs[libIndex].CheckImage(index);
             var mi = Libraries.MapLibs[libIndex].Images[index];
-            if (mi.Image == null || mi.ImageTexture == null) return;
+            //if (mi.Image == null || mi.ImageTexture == null) return;
+            if (mi.ImageTexture == null) return;
             int w = mi.Width;
             int h = mi.Height;
             DXManager.Sprite.Draw2D(mi.ImageTexture, Rectangle.Empty, new SizeF(w*zoomMIN/zoomMAX, h*zoomMIN/zoomMAX), new PointF(drawX, drawY), Color.White);
@@ -291,7 +292,8 @@ namespace Map_Editor
         {
             lib.CheckImage(index);
             var mi = lib.Images[index];
-            if (mi.Image == null || mi.ImageTexture == null) return;
+            //if (mi.Image == null || mi.ImageTexture == null) return;
+            if (mi.ImageTexture == null) return;
             int w = mi.Width;
             int h = mi.Height;
             DXManager.Sprite.Draw2D(mi.ImageTexture, Rectangle.Empty, new SizeF(w * zoomMIN / zoomMAX, h * zoomMIN / zoomMAX), new PointF(drawX, drawY), Color.White);
@@ -303,7 +305,8 @@ namespace Map_Editor
         {
             Libraries.MapLibs[libIndex].CheckImage(index);
             var mi = Libraries.MapLibs[libIndex].Images[index];
-            if (mi.Image == null || mi.ImageTexture == null) return;
+            //if (mi.Image == null || mi.ImageTexture == null) return;
+            if (mi.ImageTexture == null) return;
             int w = mi.Width;
             int h = mi.Height;
 
@@ -320,7 +323,8 @@ namespace Map_Editor
         {
             lib.CheckImage(index);
             var mi = lib.Images[index];
-            if (mi.Image == null || mi.ImageTexture == null) return;
+            //if (mi.Image == null || mi.ImageTexture == null) return;
+            if (mi.ImageTexture == null) return;
             int w = mi.Width;
             int h = mi.Height;
 

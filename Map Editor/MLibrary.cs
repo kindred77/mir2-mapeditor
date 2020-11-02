@@ -303,8 +303,25 @@ namespace Map_Editor
 
         public MLibrary(string filename)
         {
-            FileName = filename.ToLower().EndsWith(".lib")?filename:filename + ".lib";
+            FileName = filename.ToLower().EndsWith(".lib") ? filename : filename + ".lib";
             Initialize();
+        }
+
+        public void Destroy()
+        {
+            if(Images!=null)
+            {
+                foreach (var img in Images)
+                {
+                    img.Destroy();
+                }
+            }
+           
+            Images.Clear();
+            Images = null;
+            IndexList.Clear();
+            IndexList = null;
+            this.Close();
         }
 
         public void Initialize()
@@ -334,7 +351,7 @@ namespace Map_Editor
                 Images.Add(null);
 
             //for (int i = 0; i < Count; i++)
-            //    CheckImage(i);
+            //CheckImage(i);
         }
 
         public void Close()
@@ -406,18 +423,19 @@ namespace Map_Editor
             //    _stream.Seek(IndexList[index] + 12, SeekOrigin.Begin);
             //    mi.CreateTexture(_reader);
             //}
-            if (!Images[index].TextureValid)
-            {
-                _stream.Seek(IndexList[index] + 12, SeekOrigin.Begin);
-                Images[index].CreateBmpTexture(_reader);
-            }
 
             if (!Images[index].TextureValid)
             {
-
                 _stream.Seek(IndexList[index] + 17, SeekOrigin.Begin);
+                Images[index].CreateBmpTexture(_reader);
                 Images[index].CreateTexture(_reader);
             }
+
+            //if (!Images[index].TextureValid)
+            //{
+            //    _stream.Seek(IndexList[index] + 17, SeekOrigin.Begin);
+            //    Images[index].CreateTexture(_reader);
+            //}
         }
 
         public Point GetOffSet(int index)
@@ -570,17 +588,18 @@ namespace Map_Editor
                 ShadowY = reader.ReadInt16();
                 Shadow = reader.ReadByte();
                 Length = reader.ReadInt32();
-                FBytes = reader.ReadBytes(Length);
+                //FBytes = reader.ReadBytes(Length);
                 //check if there's a second layer and read it
                 HasMask = ((Shadow >> 7) == 1) ? true : false;
                 if (HasMask)
                 {
+                    reader.ReadBytes(Length);
                     MaskWidth = reader.ReadInt16();
                     MaskHeight = reader.ReadInt16();
                     MaskX = reader.ReadInt16();
                     MaskY = reader.ReadInt16();
                     MaskLength = reader.ReadInt32();
-                    MaskFBytes = reader.ReadBytes(MaskLength);
+                    //MaskFBytes = reader.ReadBytes(MaskLength);
                 }
             }
 
@@ -690,6 +709,11 @@ namespace Map_Editor
                 BitmapData data = Image.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadWrite,
                                                  PixelFormat.Format32bppArgb);
 
+                //byte[] dest = Decompress(FBytes);
+                if(FBytes==null)
+                {
+                    FBytes = reader.ReadBytes(Length);
+                }
                 byte[] dest = Decompress(FBytes);
 
                 Marshal.Copy(dest, 0, data.Scan0, dest.Length);
@@ -702,10 +726,9 @@ namespace Map_Editor
                 //    Image.Save(id + ".bmp", ImageFormat.Bmp);
                 //}
 
-                dest = null;
-
                 if (HasMask)
                 {
+                    
                     w = MaskWidth;// +(4 - MaskWidth % 4) % 4;
                     h = MaskHeight;// +(4 - MaskHeight % 4) % 4;
 
@@ -721,6 +744,12 @@ namespace Map_Editor
                         data = MaskImage.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadWrite,
                                                          PixelFormat.Format32bppArgb);
 
+                        //dest = Decompress(MaskFBytes);
+                        if(MaskFBytes==null)
+                        {
+                            reader.ReadBytes(12);
+                            MaskFBytes = reader.ReadBytes(MaskLength);
+                        }
                         dest = Decompress(MaskFBytes);
 
                         Marshal.Copy(dest, 0, data.Scan0, dest.Length);
@@ -731,10 +760,13 @@ namespace Map_Editor
                     {
                         File.AppendAllText(@".\Error.txt",
                                        string.Format("[{0}] {1}{2}", DateTime.Now, ex, Environment.NewLine));
+                        return;
                     }
                 }
 
+                dest = null;
 
+                TextureValid = true;
             }
 
             public unsafe void CreateTexture(BinaryReader reader)
@@ -751,29 +783,42 @@ namespace Map_Editor
                 stream = ImageTexture.LockRectangle(0, LockFlags.Discard);
                 Data = (byte*)stream.InternalDataPointer;
 
-                byte[] decomp = DecompressImage(reader.ReadBytes(Length));
+                //byte[] decomp = DecompressImage(reader.ReadBytes(Length));
+                if (FBytes == null)
+                {
+                    FBytes = reader.ReadBytes(Length);
+                }
+                byte[] decomp = Decompress(FBytes);
 
                 stream.Write(decomp, 0, decomp.Length);
 
-                stream.Dispose();
                 ImageTexture.UnlockRectangle(0);
 
+                stream.Dispose();
                 if (HasMask)
                 {
-                    reader.ReadBytes(12);
                     w = Width;// + (4 - Width % 4) % 4;
                     h = Height;// + (4 - Height % 4) % 4;
 
                     MaskImageTexture = new Texture(DXManager.Device, w, h, 1, Usage.None, Format.A8R8G8B8, Pool.Managed);
                     stream = MaskImageTexture.LockRectangle(0, LockFlags.Discard);
 
-                    decomp = DecompressImage(reader.ReadBytes(Length));
+                    //decomp = DecompressImage(reader.ReadBytes(Length));
+                    //decomp = Decompress(reader.ReadBytes(Length)); 
+                    if (MaskFBytes == null)
+                    {
+                        reader.ReadBytes(12);
+                        MaskFBytes = reader.ReadBytes(MaskLength);
+                    }
+                    decomp = Decompress(MaskFBytes);
 
                     stream.Write(decomp, 0, decomp.Length);
 
-                    stream.Dispose();
                     MaskImageTexture.UnlockRectangle(0);
+                    stream.Dispose();
                 }
+
+                decomp = null;
 
                 //DXManager.TextureList.Add(this);
                 TextureValid = true;
@@ -807,6 +852,42 @@ namespace Map_Editor
                     writer.Write(MaskFBytes.Length);
                     writer.Write(MaskFBytes);
                 }
+            }
+
+            public void Destroy()
+            {
+                FBytes = null;
+                if(Image!=null)
+                {
+                    Image.Dispose();
+                }
+                
+                Image = null;
+                if(Preview!=null)
+                {
+                    Preview.Dispose();
+                }
+                
+                Preview = null;
+                if(ImageTexture!=null)
+                {
+                    ImageTexture.Dispose();
+                }
+                
+                ImageTexture = null;
+                MaskFBytes = null;
+                if(MaskImage!=null)
+                {
+                    MaskImage.Dispose();
+                }
+                
+                MaskImage = null;
+                if(MaskImageTexture!=null)
+                {
+                    MaskImageTexture.Dispose();
+                }
+                
+                MaskImageTexture = null;
             }
 
             public static byte[] Compress(byte[] raw)
@@ -847,28 +928,28 @@ namespace Map_Editor
                 }
             }
 
-            private static byte[] DecompressImage(byte[] image)
-            {
-                using (GZipStream stream = new GZipStream(new MemoryStream(image), CompressionMode.Decompress))
-                {
-                    const int size = 4096;
-                    byte[] buffer = new byte[size];
-                    using (MemoryStream memory = new MemoryStream())
-                    {
-                        int count = 0;
-                        do
-                        {
-                            count = stream.Read(buffer, 0, size);
-                            if (count > 0)
-                            {
-                                memory.Write(buffer, 0, count);
-                            }
-                        }
-                        while (count > 0);
-                        return memory.ToArray();
-                    }
-                }
-            }
+            //private static byte[] DecompressImage(byte[] image)
+            //{
+            //    using (GZipStream stream = new GZipStream(new MemoryStream(image), CompressionMode.Decompress))
+            //    {
+            //        const int size = 4096;
+            //        byte[] buffer = new byte[size];
+            //        using (MemoryStream memory = new MemoryStream())
+            //        {
+            //            int count = 0;
+            //            do
+            //            {
+            //                count = stream.Read(buffer, 0, size);
+            //                if (count > 0)
+            //                {
+            //                    memory.Write(buffer, 0, count);
+            //                }
+            //            }
+            //            while (count > 0);
+            //            return memory.ToArray();
+            //        }
+            //    }
+            //}
 
             public void CreatePreview()
             {

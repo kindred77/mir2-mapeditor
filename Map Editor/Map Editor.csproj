@@ -54,6 +54,9 @@
     <ApplicationIcon>ico.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ManagedSquish, Version=2.0.0.0, Culture=neutral, PublicKeyToken=fac8b2bfeda84eab, processorArchitecture=MSIL">
+      <HintPath>..\packages\ManagedSquish.2.0.0.0\lib\net40\ManagedSquish.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.DirectX, Version=1.0.2902.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Windows\Microsoft.NET\DirectX for Managed Code\1.0.2902.0\Microsoft.DirectX.dll</HintPath>
@@ -68,6 +71,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Windows\Microsoft.NET\DirectX for Managed Code\1.0.2911.0\Microsoft.DirectX.Direct3DX.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="NativeSquish_x64, Version=2.0.0.0, Culture=neutral, PublicKeyToken=fac8b2bfeda84eab, processorArchitecture=AMD64">
+      <HintPath>..\packages\ManagedSquish.2.0.0.0\lib\net40\NativeSquish_x64.dll</HintPath>
+    </Reference>
+    <Reference Include="NativeSquish_x86, Version=2.0.0.0, Culture=neutral, PublicKeyToken=fac8b2bfeda84eab, processorArchitecture=x86">
+      <HintPath>..\packages\ManagedSquish.2.0.0.0\lib\net40\NativeSquish_x86.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -119,13 +128,13 @@
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
     <Compile Include="MapCode.cs" />
-    <Compile Include="MapConverter.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="MapConverter.cs" />
     <Compile Include="MapConverter.Designer.cs">
       <DependentUpon>MapConverter.cs</DependentUpon>
     </Compile>
     <Compile Include="MLibrary.cs" />
+    <Compile Include="MLibraryInClient.cs" />
+    <Compile Include="MLibraryV2.cs" />
     <Compile Include="NewFileFrm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -179,6 +188,7 @@
       <DependentUpon>FrmSetDoor.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="App.config" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
