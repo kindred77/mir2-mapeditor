@@ -368,12 +368,33 @@ namespace Map_Editor
                     {
                         newData[i, j].MiddleIndex = (short)convertData.TargetLibIndex;
                         int index = map.MapCells[i, j].MiddleImage - 1;
-                        //提取图片模式
-                        if (convertData.ImageIndexConvert != null && index >= 0 && index < convertData.OldLib.Images.Count)
+
+                        int animation = map.MapCells[i, j].MiddleAnimationFrame;
+                        if ((animation > 0) && (animation < 255))
                         {
-                            //先临时设置一下值
-                            convertData.ImageIndexConvert[index] = -1;
+                            if ((animation & 0x0f) > 0)
+                            {
+                                animation &= 0x0f;
+                            }
+                            if (animation > 0)
+                            {
+                                //var animationTick = M2CellInfo[x, y].MiddleAnimationTick;
+                                //index += AnimationCount % (animation + animation * animationTick) / (1 + animationTick);
+                            }
                         }
+
+                        animation = animation < 0 || animation >= 255 ? 0 : animation;
+
+                        for (int a = 0; a <= animation; a++)
+                        {
+                            //提取图片模式
+                            if (convertData.ImageIndexConvert != null && (index + a) >= 0 && (index + a) < convertData.OldLib.Images.Count)
+                            {
+                                //先临时设置一下值
+                                convertData.ImageIndexConvert[index+a] = -1;
+                            }
+                        }
+                        
                     }
                     else
                     {
@@ -384,11 +405,23 @@ namespace Map_Editor
                         newData[i, j].FrontIndex = (short)convertData.TargetLibIndex;
                         //object的image index不太一样
                         int index = (map.MapCells[i, j].FrontImage & 0x7FFF) - 1;
-                        //提取图片模式
-                        if (convertData.ImageIndexConvert != null && index >= 0 && index < convertData.OldLib.Images.Count)
+
+                        int animation = map.MapCells[i, j].FrontAnimationFrame;
+                        if ((animation & 0x80) > 0)
                         {
-                            //先临时设置一下值
-                            convertData.ImageIndexConvert[index] = -1;
+                            animation &= 0x7F;
+                        }
+
+                        animation = animation <=0 ? 0 : animation;
+
+                        for (int a = 0; a <= animation; a++)
+                        {
+                            //提取图片模式
+                            if (convertData.ImageIndexConvert != null && (index + a) >= 0 && (index + a) < convertData.OldLib.Images.Count)
+                            {
+                                //先临时设置一下值
+                                convertData.ImageIndexConvert[index + a] = -1;
+                            }
                         }
                     }
                     else
