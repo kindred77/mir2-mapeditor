@@ -398,7 +398,7 @@ namespace Map_Editor
             Close();
         }
 
-        public void CheckImage(int index)
+        public void CheckImage(int index,bool ifReadData=false,bool ifCreateTexture=true)
         {
             if (!_initialized)
                 Initialize();
@@ -412,10 +412,10 @@ namespace Map_Editor
             if (Images[index] == null)
             {
                 _stream.Position = IndexList[index];
-                Images[index] = new MImage(_reader);
+                Images[index] = new MImage(_reader, ifReadData);
             }
 
-            if (!Load) return;
+            if (!ifCreateTexture) return;
 
             //MImage mi = Images[index];
             //if (!mi.TextureValid)
@@ -577,7 +577,7 @@ namespace Map_Editor
 
             public unsafe byte* Data;
 
-            public MImage(BinaryReader reader)
+            public MImage(BinaryReader reader,bool ifReadData=false)
             {
                 //read layer 1
                 Width = reader.ReadInt16();
@@ -588,18 +588,27 @@ namespace Map_Editor
                 ShadowY = reader.ReadInt16();
                 Shadow = reader.ReadByte();
                 Length = reader.ReadInt32();
-                //FBytes = reader.ReadBytes(Length);
+                if(ifReadData)
+                {
+                    FBytes = reader.ReadBytes(Length);
+                }
                 //check if there's a second layer and read it
                 HasMask = ((Shadow >> 7) == 1) ? true : false;
                 if (HasMask)
                 {
-                    reader.ReadBytes(Length);
+                    if(!ifReadData)
+                    {
+                        reader.ReadBytes(Length);
+                    }
                     MaskWidth = reader.ReadInt16();
                     MaskHeight = reader.ReadInt16();
                     MaskX = reader.ReadInt16();
                     MaskY = reader.ReadInt16();
                     MaskLength = reader.ReadInt32();
-                    //MaskFBytes = reader.ReadBytes(MaskLength);
+                    if (ifReadData)
+                    {
+                        MaskFBytes = reader.ReadBytes(MaskLength);
+                    }
                 }
             }
 

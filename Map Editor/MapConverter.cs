@@ -260,9 +260,9 @@ namespace Map_Editor
                         MLibrary newBackLib = new MLibrary(backConvertData.TargetLibFileName);
                         for (int i = 0; i < backConvertData.ImageIndexConvert.Length; i++)
                         {
-                            if (backConvertData.ImageIndexConvert[i] != -1)
+                            if (backConvertData.ImageIndexConvert[i] == -1)
                             {
-                                backConvertData.OldLib.CheckImage(i);
+                                backConvertData.OldLib.CheckImage(i,true,false);
                                 newBackLib.Images.Add(backConvertData.OldLib.Images[i]);
                                 backConvertData.ImageIndexConvert[i] = newBackLib.Images.Count - 1;
                             }
@@ -287,14 +287,15 @@ namespace Map_Editor
                         MLibrary newMiddleLib = new MLibrary(middleConvertData.TargetLibFileName);
                         for (int i = 0; i < middleConvertData.ImageIndexConvert.Length; i++)
                         {
-                            if (middleConvertData.ImageIndexConvert[i] != -1)
+                            if (middleConvertData.ImageIndexConvert[i] == -1)
                             {
-                                middleConvertData.OldLib.CheckImage(i);
+                                middleConvertData.OldLib.CheckImage(i, true, false);
                                 newMiddleLib.Images.Add(middleConvertData.OldLib.Images[i]);
                                 middleConvertData.ImageIndexConvert[i] = newMiddleLib.Images.Count - 1;
                             }
                         }
                         newMiddleLib.Save();
+                        newMiddleLib.Destroy();
                     }
                     else
                     {
@@ -314,14 +315,15 @@ namespace Map_Editor
                         MLibrary newFrontLib = new MLibrary(frontConvertData.TargetLibFileName);
                         for (int i = 0; i < frontConvertData.ImageIndexConvert.Length; i++)
                         {
-                            if (frontConvertData.ImageIndexConvert[i] != -1)
+                            if (frontConvertData.ImageIndexConvert[i] == -1)
                             {
-                                frontConvertData.OldLib.CheckImage(i);
+                                frontConvertData.OldLib.CheckImage(i, true, false);
                                 newFrontLib.Images.Add(frontConvertData.OldLib.Images[i]);
                                 frontConvertData.ImageIndexConvert[i] = newFrontLib.Images.Count - 1;
                             }
                         }
                         newFrontLib.Save();
+                        newFrontLib.Destroy();
                     }
                     else
                     {
@@ -350,11 +352,12 @@ namespace Map_Editor
                     if(ConvertBackIdxDict.TryGetValue(newData[i, j].OriginalBackIndex,out convertData))
                     {
                         newData[i, j].BackIndex = (short)convertData.TargetLibIndex;
+                        int index = (map.MapCells[i, j].BackImage & 0x1FFFFFFF) - 1;
                         //提取图片模式
-                        if(convertData.ImageIndexConvert!=null && map.MapCells[i, j].BackImage >= 0 && map.MapCells[i, j].BackImage< convertData.OldLib.Images.Count)
+                        if (convertData.ImageIndexConvert!=null && index >= 0 && index < convertData.OldLib.Images.Count)
                         {
                             //先临时设置一下值
-                            convertData.ImageIndexConvert[map.MapCells[i, j].BackImage] = -1;
+                            convertData.ImageIndexConvert[index] = -1;
                         }
                     }
                     else
@@ -364,11 +367,12 @@ namespace Map_Editor
                     if (ConvertMiddleIdxDict.TryGetValue(newData[i, j].OriginalMiddleIndex, out convertData))
                     {
                         newData[i, j].MiddleIndex = (short)convertData.TargetLibIndex;
+                        int index = map.MapCells[i, j].MiddleImage - 1;
                         //提取图片模式
-                        if (convertData.ImageIndexConvert != null && map.MapCells[i, j].MiddleImage >= 0 && map.MapCells[i, j].MiddleImage < convertData.OldLib.Images.Count)
+                        if (convertData.ImageIndexConvert != null && index >= 0 && index < convertData.OldLib.Images.Count)
                         {
                             //先临时设置一下值
-                            convertData.ImageIndexConvert[map.MapCells[i, j].MiddleImage] = -1;
+                            convertData.ImageIndexConvert[index] = -1;
                         }
                     }
                     else
@@ -378,11 +382,13 @@ namespace Map_Editor
                     if (ConvertFrontIdxDict.TryGetValue(newData[i, j].OriginalFrontIndex, out convertData))
                     {
                         newData[i, j].FrontIndex = (short)convertData.TargetLibIndex;
+                        //object的image index不太一样
+                        int index = (map.MapCells[i, j].FrontImage & 0x7FFF) - 1;
                         //提取图片模式
-                        if (convertData.ImageIndexConvert != null && map.MapCells[i, j].FrontImage>=0 && map.MapCells[i, j].FrontImage < convertData.OldLib.Images.Count)
+                        if (convertData.ImageIndexConvert != null && index >= 0 && index < convertData.OldLib.Images.Count)
                         {
                             //先临时设置一下值
-                            convertData.ImageIndexConvert[map.MapCells[i, j].FrontImage] = -1;
+                            convertData.ImageIndexConvert[index] = -1;
                         }
                     }
                     else
@@ -419,27 +425,32 @@ namespace Map_Editor
                     ConvertData convertData;
                     if (ConvertBackIdxDict.TryGetValue(newData[i, j].OriginalBackIndex, out convertData))
                     {
+                        int index = (newData[i, j].BackImage & 0x1FFFFFFF) - 1;
                         //提取图片模式
-                        if (convertData!=null && convertData.ImageIndexConvert != null && newData[i, j].BackImage >= 0 && newData[i, j].BackImage< convertData.ImageIndexConvert.Length)
+                        if (convertData!=null && convertData.ImageIndexConvert != null && index >= 0 && index < convertData.ImageIndexConvert.Length)
                         {
-                            newData[i, j].BackImage = convertData.ImageIndexConvert[newData[i, j].BackImage];
+                            //convertData.ImageIndexConvert[index]存的是新的lib文件中的index，还要转成对应的imageIndex
+                            newData[i, j].BackImage = convertData.ImageIndexConvert[index]+1;
                         }
                     }
                     if (ConvertMiddleIdxDict.TryGetValue(newData[i, j].OriginalMiddleIndex, out convertData))
                     {
+                        int index = newData[i, j].MiddleImage - 1;
                         //提取图片模式
-                        if (convertData != null && convertData.ImageIndexConvert != null && newData[i, j].MiddleImage >= 0 && newData[i, j].MiddleImage < convertData.ImageIndexConvert.Length)
+                        if (convertData != null && convertData.ImageIndexConvert != null && index >= 0 && index < convertData.ImageIndexConvert.Length)
                         {
-                            newData[i, j].MiddleImage = (short)convertData.ImageIndexConvert[newData[i, j].MiddleImage];
+                            newData[i, j].MiddleImage = (short)(convertData.ImageIndexConvert[index]+1);
                         }
                     }
 
                     if (ConvertFrontIdxDict.TryGetValue(newData[i, j].OriginalFrontIndex, out convertData))
                     {
+                        //object的image index不太一样
+                        int index = (newData[i, j].FrontImage & 0x7FFF) - 1;
                         //提取图片模式
-                        if (convertData != null && convertData.ImageIndexConvert != null && newData[i, j].FrontImage >= 0 && newData[i, j].FrontImage < convertData.ImageIndexConvert.Length)
+                        if (convertData != null && convertData.ImageIndexConvert != null && index >= 0 && index < convertData.ImageIndexConvert.Length)
                         {
-                            newData[i, j].FrontImage = (short)convertData.ImageIndexConvert[newData[i, j].FrontImage];
+                            newData[i, j].FrontImage = (short)(convertData.ImageIndexConvert[index]+1);
                         }
                     }
 
