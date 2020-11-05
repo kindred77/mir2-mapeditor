@@ -153,11 +153,11 @@ namespace Map_Editor
                         ConvertData convertData=new ConvertData();
                         convertData.TargetLibIndex = tgtIdx;
                         convertData.OldLibFileName = (string)row.Cells[1].Value;
+                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                         convertData.TargetLibFileName = path + "/Tiles" + tgtIdx + ".lib";
                         //提取图片模式
                         if (row.Cells[3].EditedFormattedValue.ToString() == "True")
                         {
-                            convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                             convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
                         }
                         ConvertBackIdxDict[srcIdx] = convertData;
@@ -179,11 +179,11 @@ namespace Map_Editor
                         ConvertData convertData = new ConvertData();
                         convertData.TargetLibIndex = tgtIdx;
                         convertData.OldLibFileName = (string)row.Cells[1].Value;
+                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                         convertData.TargetLibFileName = path + "/SmTiles" + tgtIdx + ".lib";
                         //提取图片模式
                         if (row.Cells[3].EditedFormattedValue.ToString() == "True")
                         {
-                            convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                             convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
                         }
 
@@ -206,11 +206,11 @@ namespace Map_Editor
                         ConvertData convertData = new ConvertData();
                         convertData.TargetLibIndex = tgtIdx;
                         convertData.OldLibFileName = (string)row.Cells[1].Value;
+                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                         convertData.TargetLibFileName = path + "/Objects" + tgtIdx + ".lib";
                         //提取图片模式
                         if (row.Cells[3].EditedFormattedValue.ToString() == "True")
                         {
-                            convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                             convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
                         }
 
@@ -233,11 +233,11 @@ namespace Map_Editor
                         ConvertData convertData = new ConvertData();
                         convertData.TargetLibIndex = tgtIdx;
                         convertData.OldLibFileName = (string)row.Cells[1].Value;
+                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                         convertData.TargetLibFileName = path + "/Objects" + tgtIdx + ".lib";
                         //提取图片模式
                         if (row.Cells[3].EditedFormattedValue.ToString() == "True")
                         {
-                            convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                             convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
                         }
 
@@ -253,7 +253,7 @@ namespace Map_Editor
             //转储新的lib文件
             foreach (var backConvertData in ConvertBackIdxDict.Values)
             {
-                if (backConvertData != null && backConvertData.ImageIndexConvert != null)
+                if (backConvertData != null)
                 {
                     if(backConvertData.ImageIndexConvert != null)
                     {
@@ -272,7 +272,7 @@ namespace Map_Editor
                     }
                     else
                     {
-                        File.Copy(backConvertData.OldLib.FileName, backConvertData.TargetLibFileName);
+                        File.Copy(backConvertData.OldLibFileName, backConvertData.TargetLibFileName);
                     }
                     MessageBox.Show("保存完毕: " + backConvertData.TargetLibFileName);
                 }
@@ -280,7 +280,7 @@ namespace Map_Editor
 
             foreach (var middleConvertData in ConvertMiddleIdxDict.Values)
             {
-                if (middleConvertData != null && middleConvertData.ImageIndexConvert != null)
+                if (middleConvertData != null)
                 {
                     if (middleConvertData.ImageIndexConvert != null)
                     {
@@ -299,7 +299,7 @@ namespace Map_Editor
                     }
                     else
                     {
-                        File.Copy(middleConvertData.OldLib.FileName, middleConvertData.TargetLibFileName);
+                        File.Copy(middleConvertData.OldLibFileName, middleConvertData.TargetLibFileName);
                     }
 
                     MessageBox.Show("保存完毕: " + middleConvertData.TargetLibFileName);
@@ -308,7 +308,7 @@ namespace Map_Editor
 
             foreach (var frontConvertData in ConvertFrontIdxDict.Values)
             {
-                if (frontConvertData != null && frontConvertData.ImageIndexConvert != null)
+                if (frontConvertData != null)
                 {
                     if (frontConvertData.ImageIndexConvert != null)
                     {
@@ -327,7 +327,7 @@ namespace Map_Editor
                     }
                     else
                     {
-                        File.Copy(frontConvertData.OldLib.FileName, frontConvertData.TargetLibFileName);
+                        File.Copy(frontConvertData.OldLibFileName, frontConvertData.TargetLibFileName);
                     }
 
                     MessageBox.Show("保存完毕: " + frontConvertData.TargetLibFileName);
