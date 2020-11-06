@@ -94,7 +94,8 @@ namespace Map_Editor
         public int Width, Height;
         public CellInfo[,] MapCells;
         public CellObj[,] MapCellObjs;
-        private string FileName;
+        public string FileName;
+        public string LibFilePath;
         private byte[] Bytes;
 
         public int Type = 0;
@@ -103,6 +104,13 @@ namespace Map_Editor
         {
             this.FileName = FileName;
             initiate();
+        }
+
+        public void Destroy()
+        {
+            MapCells = null;
+            MapCellObjs = null;
+            Bytes = null;
         }
 
         private void initiate()

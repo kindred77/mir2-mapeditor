@@ -1267,15 +1267,25 @@ namespace Map_Editor
             }
             mapPoint = new Point(0, 0);
         }
-
         private void btnOpen_Click(object sender, EventArgs e)
         {
             ClearImage();
             var openFileDialog = new OpenFileDialog();
+            if(map!= null)
+            {
+                openFileDialog.InitialDirectory = Path.GetDirectoryName(map.FileName);
+            }
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 var filePath = openFileDialog.FileName;
+                string libFilePath=null;
+                if(map!=null)
+                {
+                    libFilePath = map.LibFilePath;
+                    map.Destroy();
+                }
                 map = new MapReader(filePath);
+                map.LibFilePath = libFilePath;
                 M2CellInfo = map.MapCells;
                 M2CellObj = map.MapCellObjs;
                 mapPoint = new Point(0, 0);

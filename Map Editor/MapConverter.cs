@@ -512,10 +512,15 @@ namespace Map_Editor
             if(e.ColumnIndex==1)
             {
                 var openFileDialog = new OpenFileDialog();
+                if(map.LibFilePath!=null)
+                {
+                    openFileDialog.InitialDirectory = map.LibFilePath;
+                }
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     DataGridView dgv = (DataGridView)sender;
                     dgv.Rows[e.RowIndex].Cells[e.ColumnIndex].Value = openFileDialog.FileName;
+                    map.LibFilePath = Path.GetDirectoryName(openFileDialog.FileName);
                 }
             }
             
