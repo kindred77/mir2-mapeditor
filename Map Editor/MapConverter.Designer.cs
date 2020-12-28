@@ -42,6 +42,7 @@
             this.DoorLibConvert_DGV = new System.Windows.Forms.DataGridView();
             this.ApplyTo_BTN = new System.Windows.Forms.Button();
             this.SaveTo_BTN = new System.Windows.Forms.Button();
+            this.BatchTilesProc_BTN = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -180,6 +181,16 @@
             this.SaveTo_BTN.UseVisualStyleBackColor = true;
             this.SaveTo_BTN.Click += new System.EventHandler(this.SaveTo_BTN_Click);
             // 
+            // BatchTilesProc_BTN
+            // 
+            this.BatchTilesProc_BTN.Location = new System.Drawing.Point(539, 348);
+            this.BatchTilesProc_BTN.Name = "BatchTilesProc_BTN";
+            this.BatchTilesProc_BTN.Size = new System.Drawing.Size(100, 23);
+            this.BatchTilesProc_BTN.TabIndex = 5;
+            this.BatchTilesProc_BTN.Text = "批量分离Tiles";
+            this.BatchTilesProc_BTN.UseVisualStyleBackColor = true;
+            this.BatchTilesProc_BTN.Click += new System.EventHandler(this.BatchTilesProc_BTN_Click);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -267,6 +278,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.SaveTo_BTN);
             this.Controls.Add(this.ApplyTo_BTN);
+            this.Controls.Add(this.BatchTilesProc_BTN);
             this.Controls.Add(this.DoorLibConvert_DGV);
             this.Controls.Add(this.FrontLibConvert_DGV);
             this.Controls.Add(this.MiddleLibConvert_DGV);
@@ -290,6 +302,7 @@
         private System.Windows.Forms.DataGridView DoorLibConvert_DGV;
         private System.Windows.Forms.Button ApplyTo_BTN;
         private System.Windows.Forms.Button SaveTo_BTN;
+        private System.Windows.Forms.Button BatchTilesProc_BTN;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;

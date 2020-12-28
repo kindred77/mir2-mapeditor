@@ -10,14 +10,6 @@ using System.Windows.Forms;
 
 namespace Map_Editor
 {
-    public class ConvertData
-    {
-        public int TargetLibIndex;
-        public string TargetLibFileName;
-        public string OldLibFileName;
-        public MLibrary OldLib;
-        public int[] ImageIndexConvert;
-    }
     public partial class MapConverter : Form
     {
         private MapReader map;
@@ -137,26 +129,27 @@ namespace Map_Editor
             }
         }
 
-        private void PrepareConvertInfo(string path)
+        #region prepare convert info
+        private void PrepareConvertInfoBack(string path,List<ConvertInfo> convertInfos)
         {
-            foreach (DataGridViewRow row in this.BackLibConvert_DGV.Rows)
+            foreach (ConvertInfo row in convertInfos)
             {
                 //变更原有map的lib index
-                if (row.Cells[0].Value != null && row.Cells[1].Value != null && row.Cells[2].Value != null)
+                if (row.OriginalLibIdx != null && row.LibFileName != null && row.TargetLibIdx != null)
                 {
                     int tgtIdx;
                     int srcIdx;
 
-                    if (int.TryParse(row.Cells[2].Value.ToString(), out tgtIdx)
-                        && int.TryParse(row.Cells[0].Value.ToString(), out srcIdx))
+                    if (int.TryParse(row.TargetLibIdx, out tgtIdx)
+                        && int.TryParse(row.OriginalLibIdx, out srcIdx))
                     {
-                        ConvertData convertData=new ConvertData();
+                        ConvertData convertData = new ConvertData();
                         convertData.TargetLibIndex = tgtIdx;
-                        convertData.OldLibFileName = (string)row.Cells[1].Value;
+                        convertData.OldLibFileName = row.LibFileName;
                         convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                         convertData.TargetLibFileName = path + "/Tiles" + tgtIdx + ".lib";
                         //提取图片模式
-                        if (row.Cells[3].EditedFormattedValue.ToString() == "True")
+                        if (row.IfExportImage)
                         {
                             convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
                         }
@@ -164,105 +157,119 @@ namespace Map_Editor
                     }
                 }
             }
+        }
 
-            foreach (DataGridViewRow row in this.MiddleLibConvert_DGV.Rows)
+        private void PrepareConvertInfoMiddle(string path, List<ConvertInfo> convertInfos)
+        {
+            foreach (ConvertInfo row in convertInfos)
             {
-
-                if (row.Cells[0].Value != null && row.Cells[1].Value != null && row.Cells[2].Value != null)
+                //变更原有map的lib index
+                if (row.OriginalLibIdx != null && row.LibFileName != null && row.TargetLibIdx != null)
                 {
                     int tgtIdx;
                     int srcIdx;
 
-                    if (int.TryParse(row.Cells[2].Value.ToString(), out tgtIdx)
-                        && int.TryParse(row.Cells[0].Value.ToString(), out srcIdx))
+                    if (int.TryParse(row.TargetLibIdx, out tgtIdx)
+                        && int.TryParse(row.OriginalLibIdx, out srcIdx))
                     {
                         ConvertData convertData = new ConvertData();
                         convertData.TargetLibIndex = tgtIdx;
-                        convertData.OldLibFileName = (string)row.Cells[1].Value;
+                        convertData.OldLibFileName = row.LibFileName;
                         convertData.OldLib = new MLibrary(convertData.OldLibFileName);
                         convertData.TargetLibFileName = path + "/SmTiles" + tgtIdx + ".lib";
                         //提取图片模式
-                        if (row.Cells[3].EditedFormattedValue.ToString() == "True")
+                        if (row.IfExportImage)
                         {
                             convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
                         }
-
                         ConvertMiddleIdxDict[srcIdx] = convertData;
-                    }
-                }
-            }
-
-            foreach (DataGridViewRow row in this.FrontLibConvert_DGV.Rows)
-            {
-
-                if (row.Cells[0].Value != null && row.Cells[1].Value != null && row.Cells[2].Value != null)
-                {
-                    int tgtIdx;
-                    int srcIdx;
-
-                    if (int.TryParse(row.Cells[2].Value.ToString(), out tgtIdx)
-                        && int.TryParse(row.Cells[0].Value.ToString(), out srcIdx))
-                    {
-                        ConvertData convertData = new ConvertData();
-                        convertData.TargetLibIndex = tgtIdx;
-                        convertData.OldLibFileName = (string)row.Cells[1].Value;
-                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
-                        convertData.TargetLibFileName = path + "/Objects" + tgtIdx + ".lib";
-                        //提取图片模式
-                        if (row.Cells[3].EditedFormattedValue.ToString() == "True")
-                        {
-                            convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
-                        }
-
-                        ConvertFrontIdxDict[srcIdx] = convertData;
-                    }
-                }
-            }
-
-            foreach (DataGridViewRow row in this.DoorLibConvert_DGV.Rows)
-            {
-
-                if (row.Cells[0].Value != null && row.Cells[1].Value != null && row.Cells[2].Value != null)
-                {
-                    int tgtIdx;
-                    int srcIdx;
-
-                    if (int.TryParse(row.Cells[2].Value.ToString(), out tgtIdx)
-                        && int.TryParse(row.Cells[0].Value.ToString(), out srcIdx))
-                    {
-                        ConvertData convertData = new ConvertData();
-                        convertData.TargetLibIndex = tgtIdx;
-                        convertData.OldLibFileName = (string)row.Cells[1].Value;
-                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
-                        convertData.TargetLibFileName = path + "/Objects" + tgtIdx + ".lib";
-                        //提取图片模式
-                        if (row.Cells[3].EditedFormattedValue.ToString() == "True")
-                        {
-                            convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
-                        }
-
-                        ConvertDoorIdxDict[srcIdx] = convertData;
                     }
                 }
             }
         }
 
-        private void DumpNewLib()
+        private void PrepareConvertInfoFront(string path, List<ConvertInfo> convertInfos)
         {
-            
-            //转储新的lib文件
+            foreach (ConvertInfo row in convertInfos)
+            {
+                //变更原有map的lib index
+                if (row.OriginalLibIdx != null && row.LibFileName != null && row.TargetLibIdx != null)
+                {
+                    int tgtIdx;
+                    int srcIdx;
+
+                    if (int.TryParse(row.TargetLibIdx, out tgtIdx)
+                        && int.TryParse(row.OriginalLibIdx, out srcIdx))
+                    {
+                        ConvertData convertData = new ConvertData();
+                        convertData.TargetLibIndex = tgtIdx;
+                        convertData.OldLibFileName = row.LibFileName;
+                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
+                        convertData.TargetLibFileName = path + "/Objects" + tgtIdx + ".lib";
+                        //提取图片模式
+                        if (row.IfExportImage)
+                        {
+                            convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
+                        }
+                        ConvertFrontIdxDict[srcIdx] = convertData;
+                    }
+                }
+            }
+        }
+
+        private void PrepareConvertInfoDoor(string path, List<ConvertInfo> convertInfos)
+        {
+            foreach (ConvertInfo row in convertInfos)
+            {
+                //变更原有map的lib index
+                if (row.OriginalLibIdx != null && row.LibFileName != null && row.TargetLibIdx != null)
+                {
+                    int tgtIdx;
+                    int srcIdx;
+
+                    if (int.TryParse(row.TargetLibIdx, out tgtIdx)
+                        && int.TryParse(row.OriginalLibIdx, out srcIdx))
+                    {
+                        ConvertData convertData = new ConvertData();
+                        convertData.TargetLibIndex = tgtIdx;
+                        convertData.OldLibFileName = row.LibFileName;
+                        convertData.OldLib = new MLibrary(convertData.OldLibFileName);
+                        convertData.TargetLibFileName = path + "/Objects" + tgtIdx + ".lib";
+                        //提取图片模式
+                        if (row.IfExportImage)
+                        {
+                            convertData.ImageIndexConvert = new int[convertData.OldLib.Images.Count];
+                        }
+                        ConvertDoorIdxDict[srcIdx] = convertData;
+                    }
+                }
+            }
+        }
+        
+        private void PrepareConvertInfo(string path, List<ConvertInfo> backConvertInfos, List<ConvertInfo> middleConvertInfos, List<ConvertInfo> frontConvertInfos, List<ConvertInfo> doorConvertInfos)
+        {
+            PrepareConvertInfoBack(path, backConvertInfos);
+            PrepareConvertInfoMiddle(path, middleConvertInfos);
+            PrepareConvertInfoFront(path, frontConvertInfos);
+            PrepareConvertInfoDoor(path, doorConvertInfos);
+        }
+        #endregion
+
+        #region dump new lib
+        private void DumpNewLibBack()
+        {
             foreach (var backConvertData in ConvertBackIdxDict.Values)
             {
                 if (backConvertData != null)
                 {
-                    if(backConvertData.ImageIndexConvert != null)
+                    if (backConvertData.ImageIndexConvert != null)
                     {
                         MLibrary newBackLib = new MLibrary(backConvertData.TargetLibFileName);
                         for (int i = 0; i < backConvertData.ImageIndexConvert.Length; i++)
                         {
                             if (backConvertData.ImageIndexConvert[i] == -1)
                             {
-                                backConvertData.OldLib.CheckImage(i,true,false);
+                                backConvertData.OldLib.CheckImage(i, true, false);
                                 newBackLib.Images.Add(backConvertData.OldLib.Images[i]);
                                 backConvertData.ImageIndexConvert[i] = newBackLib.Images.Count - 1;
                             }
@@ -274,10 +281,13 @@ namespace Map_Editor
                     {
                         File.Copy(backConvertData.OldLibFileName, backConvertData.TargetLibFileName);
                     }
-                    MessageBox.Show("保存完毕: " + backConvertData.TargetLibFileName);
+                    //MessageBox.Show("保存完毕: " + backConvertData.TargetLibFileName);
                 }
             }
+        }
 
+        private void DumpNewLibMiddle()
+        {
             foreach (var middleConvertData in ConvertMiddleIdxDict.Values)
             {
                 if (middleConvertData != null)
@@ -302,10 +312,13 @@ namespace Map_Editor
                         File.Copy(middleConvertData.OldLibFileName, middleConvertData.TargetLibFileName);
                     }
 
-                    MessageBox.Show("保存完毕: " + middleConvertData.TargetLibFileName);
+                    //MessageBox.Show("保存完毕: " + middleConvertData.TargetLibFileName);
                 }
             }
+        }
 
+        private void DumpNewLibFront()
+        {
             foreach (var frontConvertData in ConvertFrontIdxDict.Values)
             {
                 if (frontConvertData != null)
@@ -330,16 +343,37 @@ namespace Map_Editor
                         File.Copy(frontConvertData.OldLibFileName, frontConvertData.TargetLibFileName);
                     }
 
-                    MessageBox.Show("保存完毕: " + frontConvertData.TargetLibFileName);
+                    //MessageBox.Show("保存完毕: " + frontConvertData.TargetLibFileName);
                 }
             }
         }
 
-        private void ConvertMap(string path,string fileName)
+        private void DumpNewLib()
         {
+            //转储新的lib文件
+            DumpNewLibBack();
+            DumpNewLibMiddle();
+            DumpNewLibFront();
+        }
+        #endregion
 
-            PrepareConvertInfo(path);
-            
+        private void ConvertMap(ConvertType convertType,
+            string targetPath,
+            string fileName, 
+            List<ConvertInfo> backConvertInfos, 
+            List<ConvertInfo> middleConvertInfos, 
+            List<ConvertInfo> frontConvertInfos, 
+            List<ConvertInfo> doorConvertInfos)
+        {
+            if(convertType == ConvertType.Back)
+            {
+                PrepareConvertInfoBack(targetPath, backConvertInfos);
+            }
+            else
+            {
+                PrepareConvertInfo(targetPath, backConvertInfos, middleConvertInfos, frontConvertInfos, doorConvertInfos);
+            }
+
             CellInfo[,] newData = new CellInfo[map.Width,map.Height];
 
             //先转换mapdata里的libIndex数据,顺便提取出image index
@@ -349,7 +383,7 @@ namespace Map_Editor
                 {
                     newData[i,j] = map.MapCells[i,j].Clone();
                     ConvertData convertData;
-                    if(ConvertBackIdxDict.TryGetValue(newData[i, j].OriginalBackIndex,out convertData))
+                    if(ConvertBackIdxDict.TryGetValue(newData[i, j].OriginalBackIndex,out convertData) && (convertType == ConvertType.Back || convertType == ConvertType.All))
                     {
                         newData[i, j].BackIndex = (short)convertData.TargetLibIndex;
                         int index = (map.MapCells[i, j].BackImage & 0x1FFFFFFF) - 1;
@@ -364,7 +398,7 @@ namespace Map_Editor
                     {
                         newData[i, j].BackIndex = newData[i, j].OriginalBackIndex;
                     }
-                    if (ConvertMiddleIdxDict.TryGetValue(newData[i, j].OriginalMiddleIndex, out convertData))
+                    if (ConvertMiddleIdxDict.TryGetValue(newData[i, j].OriginalMiddleIndex, out convertData) && (convertType == ConvertType.Middle || convertType == ConvertType.All))
                     {
                         newData[i, j].MiddleIndex = (short)convertData.TargetLibIndex;
                         int index = map.MapCells[i, j].MiddleImage - 1;
@@ -400,7 +434,7 @@ namespace Map_Editor
                     {
                         newData[i, j].MiddleIndex = newData[i, j].OriginalMiddleIndex;
                     }
-                    if (ConvertFrontIdxDict.TryGetValue(newData[i, j].OriginalFrontIndex, out convertData))
+                    if (ConvertFrontIdxDict.TryGetValue(newData[i, j].OriginalFrontIndex, out convertData) && (convertType == ConvertType.Front || convertType == ConvertType.All))
                     {
                         newData[i, j].FrontIndex = (short)convertData.TargetLibIndex;
                         //object的image index不太一样
@@ -445,9 +479,16 @@ namespace Map_Editor
                     //}
                 }
             }
-            
+
             //保存新的lib
-            DumpNewLib();
+            if (convertType == ConvertType.Back)
+            {
+                DumpNewLibBack();
+            }
+            else
+            {
+                DumpNewLib();
+            }
 
             //提取图片模式的话image index需要更新
             //再根据新的lib转换一下mapdata中的image index
@@ -456,7 +497,7 @@ namespace Map_Editor
                 for (int j = 0; j < map.Height; j++)
                 {
                     ConvertData convertData;
-                    if (ConvertBackIdxDict.TryGetValue(newData[i, j].OriginalBackIndex, out convertData))
+                    if (ConvertBackIdxDict.TryGetValue(newData[i, j].OriginalBackIndex, out convertData) && (convertType == ConvertType.Back || convertType == ConvertType.All))
                     {
                         int index = (newData[i, j].BackImage & 0x1FFFFFFF) - 1;
                         //提取图片模式
@@ -466,7 +507,7 @@ namespace Map_Editor
                             newData[i, j].BackImage = convertData.ImageIndexConvert[index]+1;
                         }
                     }
-                    if (ConvertMiddleIdxDict.TryGetValue(newData[i, j].OriginalMiddleIndex, out convertData))
+                    if (ConvertMiddleIdxDict.TryGetValue(newData[i, j].OriginalMiddleIndex, out convertData) && (convertType == ConvertType.Middle || convertType == ConvertType.All))
                     {
                         int index = newData[i, j].MiddleImage - 1;
                         //提取图片模式
@@ -476,7 +517,7 @@ namespace Map_Editor
                         }
                     }
 
-                    if (ConvertFrontIdxDict.TryGetValue(newData[i, j].OriginalFrontIndex, out convertData))
+                    if (ConvertFrontIdxDict.TryGetValue(newData[i, j].OriginalFrontIndex, out convertData) && (convertType == ConvertType.Front || convertType == ConvertType.All))
                     {
                         //object的image index不太一样
                         int index = (newData[i, j].FrontImage & 0x7FFF) - 1;
@@ -490,7 +531,35 @@ namespace Map_Editor
                 }
             }
 
-            map.SaveAsNormal(path+"/"+ fileName, newData, map.Width, map.Height);
+            map.SaveAsNormal(targetPath + "/"+ fileName, newData, map.Width, map.Height);
+        }
+
+        private List<ConvertInfo> GetConvertInfos(DataGridView dgv)
+        {
+            List<ConvertInfo> convertInfos = new List<ConvertInfo>();
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                ConvertInfo convertInfo = new ConvertInfo();
+                if (row.Cells[0].Value != null && !row.Cells[0].Value.ToString().Trim().Equals(""))
+                {
+                    convertInfo.OriginalLibIdx = row.Cells[0].Value.ToString().Trim();
+                }
+                if (row.Cells[1].Value != null && !row.Cells[1].Value.ToString().Trim().Equals(""))
+                {
+                    convertInfo.LibFileName = row.Cells[1].Value.ToString().Trim();
+                }
+                if (row.Cells[2].Value != null && !row.Cells[2].Value.ToString().Trim().Equals(""))
+                {
+                    convertInfo.TargetLibIdx = row.Cells[2].Value.ToString().Trim();
+                }
+                if (row.Cells[3].EditedFormattedValue != null && !row.Cells[3].EditedFormattedValue.ToString().Equals("True"))
+                {
+                    convertInfo.IfExportImage = true;
+                }
+                convertInfos.Add(convertInfo);
+            }
+
+            return convertInfos;
         }
 
         private void SaveTo_BTN_Click(object sender, EventArgs e)
@@ -502,8 +571,74 @@ namespace Map_Editor
             {
                 string path = Path.GetDirectoryName(saveFileDialog.FileName);
                 string fileName=Path.GetFileName(saveFileDialog.FileName);
-                ConvertMap(path, fileName);
+                ConvertMap(ConvertType.All,path, fileName,
+                    GetConvertInfos(this.BackLibConvert_DGV),
+                    GetConvertInfos(this.MiddleLibConvert_DGV),
+                    GetConvertInfos(this.FrontLibConvert_DGV),
+                    GetConvertInfos(this.DoorLibConvert_DGV));
                 MessageBox.Show("保存成功!");
+            }
+        }
+
+        private Dictionary<string, Tuple<string,int>> ParseBatchConfig(string batchConfigTxt)
+        {
+            Dictionary<string, Tuple<string, int>> result = new Dictionary<string, Tuple<string, int>>();
+
+            if(File.Exists(batchConfigTxt))
+            {
+                using (var fs= new FileStream(batchConfigTxt, FileMode.Open, FileAccess.Read))
+                {
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        string strLine= sr.ReadLine();
+                        while (strLine != null)
+                        {
+                            string[] strs=strLine.Split(' ');
+                            int idx;
+                            if(strs.Length>=3 && !strs[0].Trim().Equals("") && !strs[1].Trim().Equals("") && !strs[2].Trim().Equals("") && int.TryParse(strs[2].Trim(),out idx))
+                            {
+                                result[strs[0].Trim()] = new Tuple<string,int>(strs[1].Trim(),idx);
+                            }
+                            strLine = sr.ReadLine();
+                        }
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("配置文件不存在: "+ batchConfigTxt);
+            }
+
+            return result;
+        }
+
+        private void BatchTilesProc_BTN_Click(object sender, EventArgs e)
+        {
+            string batchConfigTxt = "batchtiles.txt";
+            MessageBox.Show("本功能支持且仅支持针对多个地图做从Tiles.lib文件中提取生成新的lib文件。\n请先在指定的目录配置好"+ batchConfigTxt + "文件，以空格分隔，第一列是地图文件名前缀(不包含.map扩展名)，第二列是原来的back tiles绝对路径(一般是Tiles.lib绝对路径)，第三列是提取后back tiles文件名前缀。");
+            FolderBrowserDialog pathDialog = new FolderBrowserDialog();
+            pathDialog.SelectedPath = Environment.CurrentDirectory;
+            if (pathDialog.ShowDialog() == DialogResult.OK)
+            {
+                string txtPath = pathDialog.SelectedPath;
+
+                Dictionary<string, Tuple<string, int>>  convertMapInfos=ParseBatchConfig(batchConfigTxt);
+
+                List<ConvertInfo> convertBackInfos = new List<ConvertInfo>();
+                foreach (var pair in convertMapInfos)
+                {
+                    convertBackInfos.Clear();
+
+                    ConvertInfo convertInfo = new ConvertInfo();
+                    convertInfo.OriginalLibIdx = "0";//为抽取Tiles.lib里的图片生成新的lib文件
+                    convertInfo.LibFileName = pair.Value.Item1;
+                    convertInfo.TargetLibIdx = pair.Value.Item2+"";
+                    convertInfo.IfExportImage = true;
+
+                    convertBackInfos.Add(convertInfo);
+                    ConvertMap(ConvertType.Back, txtPath, pair.Key, convertBackInfos, null, null, null);
+                }
+                MessageBox.Show("完成");
             }
         }
 
@@ -525,5 +660,32 @@ namespace Map_Editor
             }
             
         }
+    }
+
+    class ConvertData
+    {
+        public int TargetLibIndex;
+        public string TargetLibFileName;
+        public string OldLibFileName;
+        public MLibrary OldLib;
+        public int[] ImageIndexConvert;
+    }
+
+    class ConvertInfo
+    {
+        public string OriginalLibIdx=null;
+        public string LibFileName = null;
+        public string TargetLibIdx = null;
+        public bool IfExportImage=false;
+
+    }
+
+    enum ConvertType
+    {
+        All,
+        Back,
+        Middle,
+        Front,
+        Door
     }
 }
