@@ -615,7 +615,7 @@ namespace Map_Editor
         private void BatchTilesProc_BTN_Click(object sender, EventArgs e)
         {
             string batchConfigTxt = "batchtiles.txt";
-            MessageBox.Show("本功能支持且仅支持针对多个地图做从Tiles.lib文件中提取生成新的lib文件。\n请先在指定的目录配置好"+ batchConfigTxt + "文件，以空格分隔，第一列是地图文件名前缀(不包含.map扩展名)，第二列是原来的back tiles绝对路径(一般是Tiles.lib绝对路径)，第三列是提取后back tiles文件名前缀。");
+            MessageBox.Show("本功能支持且仅支持针对多个地图做从Tiles.lib文件中提取生成新的lib文件。\n请先在程序所在目录配置好"+ batchConfigTxt + "文件，以空格分隔，第一列是地图文件绝对路径(包含.map扩展名)，第二列是原来的back tiles绝对路径(一般是Tiles.lib绝对路径)，第三列是提取后back tiles文件名前缀(比如1,2,3...)。");
             FolderBrowserDialog pathDialog = new FolderBrowserDialog();
             pathDialog.SelectedPath = Environment.CurrentDirectory;
             if (pathDialog.ShowDialog() == DialogResult.OK)
@@ -636,7 +636,9 @@ namespace Map_Editor
                     convertInfo.IfExportImage = true;
 
                     convertBackInfos.Add(convertInfo);
-                    ConvertMap(ConvertType.Back, txtPath, pair.Key, convertBackInfos, null, null, null);
+                    MapReader map = new MapReader(pair.Key);
+                    SetData(map);
+                    ConvertMap(ConvertType.Back, txtPath, Path.GetFileName(pair.Key), convertBackInfos, null, null, null);
                 }
                 MessageBox.Show("完成");
             }
